@@ -13,21 +13,21 @@ Research questions:
 
 # **Potential Use cases**
 
--   **Energy Consumption Prediction:** Predict future energy usage, aid planning, and track SDG 7 progress.
+1.  **Energy Consumption Prediction:** Predict future energy usage, aid planning, and track SDG 7 progress.
 
--   **Carbon Emission Forecasting:** Forecast CO2 emissions, support climate strategies.
+2.  **Carbon Emission Forecasting:** Forecast CO2 emissions, support climate strategies.
 
--   **Energy Access Classification:** Categorize regions for infrastructure development, understand sustainable energy's role.
+3.  **Energy Access Classification:** Categorize regions for infrastructure development, understand sustainable energy's role.
 
--   **Sustainable Development Goal Tracking:** Monitor progress towards Goal 7, evaluate policy impact.
+4.  **Sustainable Development Goal Tracking:** Monitor progress towards Goal 7, evaluate policy impact.
 
--   **Energy Equity Analysis:** Analyze access, density, and growth for equitable distribution.
+5.  **Energy Equity Analysis:** Analyze access, density, and growth for equitable distribution.
 
--   **Energy Efficiency Optimization:** Identify intensive areas for environmental impact reduction.
+6.  **Energy Efficiency Optimization:** Identify intensive areas for environmental impact reduction.
 
--   **Renewable Energy Potential Assessment:** Identify regions for green investments based on capacity.
+7.  **Renewable Energy Potential Assessment:** Identify regions for green investments based on capacity.
 
--   **Renewable Energy Investment Strategies:** Guide investors towards sustainable opportunities.
+8.  **Renewable Energy Investment Strategies:** Guide investors towards sustainable opportunities.
 
 Load required libraries
 
@@ -39,21 +39,22 @@ library(rnaturalearth)
 library(sf)
 ```
 
-Read the data
+Read the data, view first few columns, and sum the NA values for each column
 
 ```{r  message=FALSE, warning=FALSE}
 energy_data <- read_csv(here("raw_data","energy_data.csv"))
+
+head(energy_data)
+data.frame(total_NA_count = colSums(is.na(energy_data)))
 ```
 
 Check the class of each columns
 
 ```{r}
-##build function
+##build function to check columns class iteratively
 for (i in seq_along(energy_data)){
   print(class(energy_data[[i]]))
 }
-##use already built fucntion to check the class
-##lapply(energy_data, class))
 ```
 
 Data-type is in correct format except for country. Change the column type. (This code should change data type and it is vital to run this before moving to next step)
@@ -67,17 +68,38 @@ for (i in seq_along(energy_data)){
 }
 ```
 
-Shorten column names from energy_data
+Shorten column names from energy_data. Short names are better for labeling in visualization
 
 ```{r}
-
+energy_data <- energy_data %>%
+  rename( popElectric = "Access to electricity (% of population)",
+          cleanfuels = "Access to clean fuels for cooking",
+          renewable_elec_cap =  "Renewable-electricity-generating-capacity-per-capita",
+          finance_flow = "Financial flows to developing countries (US $)",
+          renewable_inTotal= "Renewable energy share in the total final energy consumption (%)",
+          fossil_eng= "Electricity from fossil fuels (TWh)",
+          n_elece = "Electricity from nuclear (TWh)",
+          electric = "Low-carbon electricity (% electricity)",
+          electric_re = "Electricity from renewables (TWh)",
+          energy_cap = "Primary energy consumption per capita (kWh/person)",
+          energy_in = "Energy intensity level of primary energy (MJ/$2017 PPP GDP)",
+          co2_emis = "Value_co2_emissions_kt_by_country",
+          renewables = "Renewables (% equivalent primary energy)",
+          gdp = "gdp_growth",
+          gdp_cap = "gdp_per_capita",
+          pop_density = "Density\\n(P/Km2)",
+          land_area = "Land Area(Km2)",
+          Lat = "Latitude",
+          Lon = "Longitude")
 ```
 
 Visual representation of the raw data
 
 ```{r}
 world_map <- ne_countries(returnclass = "sf", scale = "medium")
-  world_map %>% ggplot() + geom_sf()
+map <- world_map %>% 
+       ggplot() +
+       geom_sf()
 ```
 
 Join the raw energy data with the global data based on ID
@@ -85,9 +107,9 @@ Join the raw energy data with the global data based on ID
 ```{r  message=FALSE, warning=FALSE}
 joined <- right_join(world_map,energy_data,
                      by=c("sovereignt"="Entity")) %>% 
-  filter(Year==2020)
+          filter(Year==2020)
 
-for (i in which(colnames(joined)=="Year"): which(colnames(joined)=="Density\\n(P/Km2)")){
+for (i in which(colnames(joined)=="Year"): which(colnames(joined)=="pop_density")){
   maps <- world_map %>% 
     st_transform(crs="+proj=robin") %>% 
     ggplot()+
@@ -100,10 +122,12 @@ for (i in which(colnames(joined)=="Year"): which(colnames(joined)=="Density\\n(P
 
 ```
 
-```{Correlation to see association between variables}
-```
+Correlation to see association between variables
 
 ```{r}
 data_for_correlation <- as.matrix(energy_data[10:length(energy_data)])
-corrplot::corrplot(cor(data_for_correlation, use = 'na'))
+corrplot::corrplot(cor(data_for_correlation, use = 'na'),
+                   method = "ellipse",
+                   title  = "Correlation between variables in Energy data",
+                   tl.col = "black")
 ```

@@ -106,7 +106,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Research questions:</p>
 <section id="potential-use-cases" class="level1">
 <h1><strong>Potential Use cases</strong></h1>
-<ul>
+<ol type="1">
 <li><p><strong>Energy Consumption Prediction:</strong> Predict future energy usage, aid planning, and track SDG 7 progress.</p></li>
 <li><p><strong>Carbon Emission Forecasting:</strong> Forecast CO2 emissions, support climate strategies.</p></li>
 <li><p><strong>Energy Access Classification:</strong> Categorize regions for infrastructure development, understand sustainable energy’s role.</p></li>
@@ -115,7 +115,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p><strong>Energy Efficiency Optimization:</strong> Identify intensive areas for environmental impact reduction.</p></li>
 <li><p><strong>Renewable Energy Potential Assessment:</strong> Identify regions for green investments based on capacity.</p></li>
 <li><p><strong>Renewable Energy Investment Strategies:</strong> Guide investors towards sustainable opportunities.</p></li>
-</ul>
+</ol>
 <p>Load required libraries</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
@@ -124,16 +124,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rnaturalearth)</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Read the data</p>
+<p>Read the data, view first few columns, and sum the NA values for each column</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>energy_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">"raw_data"</span>,<span class="st">"energy_data.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>energy_data <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="fu">here</span>(<span class="st">"raw_data"</span>,<span class="st">"energy_data.csv"</span>))</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(energy_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 21
+  Entity       Year Access to electricity (% of populat…¹ Access to clean fuel…²
+  &lt;chr&gt;       &lt;dbl&gt;                                 &lt;dbl&gt;                  &lt;dbl&gt;
+1 Afghanistan  2000                                  1.61                    6.2
+2 Afghanistan  2001                                  4.07                    7.2
+3 Afghanistan  2002                                  9.41                    8.2
+4 Afghanistan  2003                                 14.7                     9.5
+5 Afghanistan  2004                                 20.1                    10.9
+6 Afghanistan  2005                                 25.4                    12.2
+# ℹ abbreviated names: ¹​`Access to electricity (% of population)`,
+#   ²​`Access to clean fuels for cooking`
+# ℹ 17 more variables:
+#   `Renewable-electricity-generating-capacity-per-capita` &lt;dbl&gt;,
+#   `Financial flows to developing countries (US $)` &lt;dbl&gt;,
+#   `Renewable energy share in the total final energy consumption (%)` &lt;dbl&gt;,
+#   `Electricity from fossil fuels (TWh)` &lt;dbl&gt;, …</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">total_NA_count =</span> <span class="fu">colSums</span>(<span class="fu">is.na</span>(energy_data)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                                                 total_NA_count
+Entity                                                                        0
+Year                                                                          0
+Access to electricity (% of population)                                      10
+Access to clean fuels for cooking                                           169
+Renewable-electricity-generating-capacity-per-capita                        931
+Financial flows to developing countries (US $)                             2089
+Renewable energy share in the total final energy consumption (%)            194
+Electricity from fossil fuels (TWh)                                          21
+Electricity from nuclear (TWh)                                              126
+Electricity from renewables (TWh)                                            21
+Low-carbon electricity (% electricity)                                       42
+Primary energy consumption per capita (kWh/person)                            0
+Energy intensity level of primary energy (MJ/$2017 PPP GDP)                 207
+Value_co2_emissions_kt_by_country                                           428
+Renewables (% equivalent primary energy)                                   2137
+gdp_growth                                                                  317
+gdp_per_capita                                                              282
+Density\\n(P/Km2)                                                             1
+Land Area(Km2)                                                                1
+Latitude                                                                      1
+Longitude                                                                     1</code></pre>
+</div>
 </div>
 <p>Check the class of each columns</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="do">##build function</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(energy_data)){</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">class</span>(energy_data[[i]]))</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="do">##build function to check columns class iteratively</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(energy_data)){</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(<span class="fu">class</span>(energy_data[[i]]))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "character"
 [1] "numeric"
@@ -157,171 +202,123 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 [1] "numeric"
 [1] "numeric"</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">##use already built fucntion to check the class</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">lapply</span>(energy_data, class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>$Entity
-[1] "character"
-
-$Year
-[1] "numeric"
-
-$`Access to electricity (% of population)`
-[1] "numeric"
-
-$`Access to clean fuels for cooking`
-[1] "numeric"
-
-$`Renewable-electricity-generating-capacity-per-capita`
-[1] "numeric"
-
-$`Financial flows to developing countries (US $)`
-[1] "numeric"
-
-$`Renewable energy share in the total final energy consumption (%)`
-[1] "numeric"
-
-$`Electricity from fossil fuels (TWh)`
-[1] "numeric"
-
-$`Electricity from nuclear (TWh)`
-[1] "numeric"
-
-$`Electricity from renewables (TWh)`
-[1] "numeric"
-
-$`Low-carbon electricity (% electricity)`
-[1] "numeric"
-
-$`Primary energy consumption per capita (kWh/person)`
-[1] "numeric"
-
-$`Energy intensity level of primary energy (MJ/$2017 PPP GDP)`
-[1] "numeric"
-
-$Value_co2_emissions_kt_by_country
-[1] "numeric"
-
-$`Renewables (% equivalent primary energy)`
-[1] "numeric"
-
-$gdp_growth
-[1] "numeric"
-
-$gdp_per_capita
-[1] "numeric"
-
-$`Density\\n(P/Km2)`
-[1] "numeric"
-
-$`Land Area(Km2)`
-[1] "numeric"
-
-$Latitude
-[1] "numeric"
-
-$Longitude
-[1] "numeric"</code></pre>
-</div>
 </div>
 <p>Data-type is in correct format except for country. Change the column type. (This code should change data type and it is vital to run this before moving to next step)</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(energy_data)){</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">class</span>(energy_data[[i]]) <span class="sc">==</span> <span class="st">"character"</span>){</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    energy_data[[i]] <span class="ot">=</span> <span class="fu">as.factor</span>(energy_data[[i]])</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  }<span class="cf">else</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    energy_data[[i]] <span class="ot">=</span> <span class="fu">as.numeric</span>(energy_data[[i]])</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">seq_along</span>(energy_data)){</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(<span class="fu">class</span>(energy_data[[i]]) <span class="sc">==</span> <span class="st">"character"</span>){</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    energy_data[[i]] <span class="ot">=</span> <span class="fu">as.factor</span>(energy_data[[i]])</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  }<span class="cf">else</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    energy_data[[i]] <span class="ot">=</span> <span class="fu">as.numeric</span>(energy_data[[i]])</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Shorten column names from energy_data. Short names are better for labeling in visualization</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>energy_data <span class="ot">&lt;-</span> energy_data <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>( <span class="at">popElectric =</span> <span class="st">"Access to electricity (% of population)"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>          <span class="at">cleanfuels =</span> <span class="st">"Access to clean fuels for cooking"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>          <span class="at">renewable_elec_cap =</span>  <span class="st">"Renewable-electricity-generating-capacity-per-capita"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>          <span class="at">finance_flow =</span> <span class="st">"Financial flows to developing countries (US $)"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>          <span class="at">renewable_inTotal=</span> <span class="st">"Renewable energy share in the total final energy consumption (%)"</span>,</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>          <span class="at">fossil_eng=</span> <span class="st">"Electricity from fossil fuels (TWh)"</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>          <span class="at">n_elece =</span> <span class="st">"Electricity from nuclear (TWh)"</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>          <span class="at">electric =</span> <span class="st">"Low-carbon electricity (% electricity)"</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>          <span class="at">electric_re =</span> <span class="st">"Electricity from renewables (TWh)"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>          <span class="at">energy_cap =</span> <span class="st">"Primary energy consumption per capita (kWh/person)"</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">energy_in =</span> <span class="st">"Energy intensity level of primary energy (MJ/$2017 PPP GDP)"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">co2_emis =</span> <span class="st">"Value_co2_emissions_kt_by_country"</span>,</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">renewables =</span> <span class="st">"Renewables (% equivalent primary energy)"</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">gdp =</span> <span class="st">"gdp_growth"</span>,</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">gdp_cap =</span> <span class="st">"gdp_per_capita"</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">pop_density =</span> <span class="st">"Density</span><span class="sc">\\</span><span class="st">n(P/Km2)"</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>          <span class="at">land_area =</span> <span class="st">"Land Area(Km2)"</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>          <span class="at">Lat =</span> <span class="st">"Latitude"</span>,</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">Lon =</span> <span class="st">"Longitude"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Visual representation of the raw data</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>world_map <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">returnclass =</span> <span class="st">"sf"</span>, <span class="at">scale =</span> <span class="st">"medium"</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  world_map <span class="sc">%&gt;%</span> <span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">geom_sf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
-</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>world_map <span class="ot">&lt;-</span> <span class="fu">ne_countries</span>(<span class="at">returnclass =</span> <span class="st">"sf"</span>, <span class="at">scale =</span> <span class="st">"medium"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>map <span class="ot">&lt;-</span> world_map <span class="sc">%&gt;%</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>       <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">geom_sf</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Join the raw energy data with the global data based on ID</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>joined <span class="ot">&lt;-</span> <span class="fu">right_join</span>(world_map,energy_data,</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">by=</span><span class="fu">c</span>(<span class="st">"sovereignt"</span><span class="ot">=</span><span class="st">"Entity"</span>)) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Year<span class="sc">==</span><span class="dv">2020</span>)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">which</span>(<span class="fu">colnames</span>(joined)<span class="sc">==</span><span class="st">"Year"</span>)<span class="sc">:</span> <span class="fu">which</span>(<span class="fu">colnames</span>(joined)<span class="sc">==</span><span class="st">"Density</span><span class="sc">\\</span><span class="st">n(P/Km2)"</span>)){</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  maps <span class="ot">&lt;-</span> world_map <span class="sc">%&gt;%</span> </span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="st">"+proj=robin"</span>) <span class="sc">%&gt;%</span> </span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>()<span class="sc">+</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">color=</span><span class="st">"darkgrey"</span>)<span class="sc">+</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data=</span>joined, <span class="fu">aes</span>(<span class="at">fill=</span>joined[[i<span class="sc">+</span><span class="dv">1</span>]]))<span class="sc">+</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="fu">colnames</span>(joined[i<span class="sc">+</span><span class="dv">1</span>][<span class="dv">1</span>]))<span class="sc">+</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.title=</span> <span class="fu">element_text</span>(<span class="st">"none"</span>))</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(maps)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-3.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-4.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-5.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-6.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-7.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-8.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-9.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-10.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-11.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-12.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-13.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-14.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-15.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-16.png" class="img-fluid" width="672"></p>
-</div>
-<div class="cell-output-display">
-<p><img src="rendered_document_files/figure-html/unnamed-chunk-6-17.png" class="img-fluid" width="672"></p>
-</div>
-</div>
-<div class="cell">
-<pre class="correlation cell-code"><code></code></pre>
-</div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>data_for_correlation <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(energy_data[<span class="dv">10</span><span class="sc">:</span><span class="fu">length</span>(energy_data)])</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_for_correlation, <span class="at">use =</span> <span class="st">'na'</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Warning in corrplot::corrplot(cor(data_for_correlation, use = "na")): Not been
-able to calculate text margin, please try again with a clean new empty window
-using {plot.new(); dev.off()} or reduce tl.cex</code></pre>
-</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>joined <span class="ot">&lt;-</span> <span class="fu">right_join</span>(world_map,energy_data,</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">by=</span><span class="fu">c</span>(<span class="st">"sovereignt"</span><span class="ot">=</span><span class="st">"Entity"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>          <span class="fu">filter</span>(Year<span class="sc">==</span><span class="dv">2020</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="fu">which</span>(<span class="fu">colnames</span>(joined)<span class="sc">==</span><span class="st">"Year"</span>)<span class="sc">:</span> <span class="fu">which</span>(<span class="fu">colnames</span>(joined)<span class="sc">==</span><span class="st">"pop_density"</span>)){</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  maps <span class="ot">&lt;-</span> world_map <span class="sc">%&gt;%</span> </span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">st_transform</span>(<span class="at">crs=</span><span class="st">"+proj=robin"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>()<span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">color=</span><span class="st">"darkgrey"</span>)<span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data=</span>joined, <span class="fu">aes</span>(<span class="at">fill=</span>joined[[i<span class="sc">+</span><span class="dv">1</span>]]))<span class="sc">+</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">xlab</span>(<span class="fu">colnames</span>(joined[i<span class="sc">+</span><span class="dv">1</span>][<span class="dv">1</span>]))<span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.title=</span> <span class="fu">element_text</span>(<span class="st">"none"</span>))</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(maps)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <p><img src="rendered_document_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-4.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-5.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-6.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-7.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-8.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-9.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-10.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-11.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-12.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-13.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-14.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-15.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-16.png" class="img-fluid" width="672"></p>
+</div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-7-17.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Correlation to see association between variables</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>data_for_correlation <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(energy_data[<span class="dv">10</span><span class="sc">:</span><span class="fu">length</span>(energy_data)])</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>corrplot<span class="sc">::</span><span class="fu">corrplot</span>(<span class="fu">cor</span>(data_for_correlation, <span class="at">use =</span> <span class="st">'na'</span>),</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method =</span> <span class="st">"ellipse"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">title  =</span> <span class="st">"Correlation between variables in Energy data"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">tl.col =</span> <span class="st">"black"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="rendered_document_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </section>
