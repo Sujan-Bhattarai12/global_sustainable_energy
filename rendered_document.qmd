@@ -1,0 +1,109 @@
+---
+title: "Global Data on Sustainable Energy (2000-2020)"
+author: "Sujan Bhattarai"
+format: html
+editor: visual
+---
+
+The required data is download from the Kaggle
+
+(link: https://www.kaggle.com/datasets/anshtanwar/global-data-on-sustainable-energy)
+
+Research questions:
+
+# **Potential Use cases**
+
+-   **Energy Consumption Prediction:** Predict future energy usage, aid planning, and track SDG 7 progress.
+
+-   **Carbon Emission Forecasting:** Forecast CO2 emissions, support climate strategies.
+
+-   **Energy Access Classification:** Categorize regions for infrastructure development, understand sustainable energy's role.
+
+-   **Sustainable Development Goal Tracking:** Monitor progress towards Goal 7, evaluate policy impact.
+
+-   **Energy Equity Analysis:** Analyze access, density, and growth for equitable distribution.
+
+-   **Energy Efficiency Optimization:** Identify intensive areas for environmental impact reduction.
+
+-   **Renewable Energy Potential Assessment:** Identify regions for green investments based on capacity.
+
+-   **Renewable Energy Investment Strategies:** Guide investors towards sustainable opportunities.
+
+Load required libraries
+
+```{r  message=FALSE, warning=FALSE}
+library(tidyverse)
+library(here)
+library(janitor)
+library(rnaturalearth)
+library(sf)
+```
+
+Read the data
+
+```{r  message=FALSE, warning=FALSE}
+energy_data <- read_csv(here("raw_data","energy_data.csv"))
+```
+
+Check the class of each columns
+
+```{r}
+##build function
+for (i in seq_along(energy_data)){
+  print(class(energy_data[[i]]))
+}
+##use already built fucntion to check the class
+##lapply(energy_data, class))
+```
+
+Data-type is in correct format except for country. Change the column type. (This code should change data type and it is vital to run this before moving to next step)
+
+```{r}
+for (i in seq_along(energy_data)){
+  if(class(energy_data[[i]]) == "character"){
+    energy_data[[i]] = as.factor(energy_data[[i]])
+  }else
+    energy_data[[i]] = as.numeric(energy_data[[i]])
+}
+```
+
+Shorten column names from energy_data
+
+```{r}
+
+```
+
+Visual representation of the raw data
+
+```{r}
+world_map <- ne_countries(returnclass = "sf", scale = "medium")
+  world_map %>% ggplot() + geom_sf()
+```
+
+Join the raw energy data with the global data based on ID
+
+```{r  message=FALSE, warning=FALSE}
+joined <- right_join(world_map,energy_data,
+                     by=c("sovereignt"="Entity")) %>% 
+  filter(Year==2020)
+
+for (i in which(colnames(joined)=="Year"): which(colnames(joined)=="Density\\n(P/Km2)")){
+  maps <- world_map %>% 
+    st_transform(crs="+proj=robin") %>% 
+    ggplot()+
+    geom_sf(color="darkgrey")+
+    geom_sf(data=joined, aes(fill=joined[[i+1]]))+
+    xlab(colnames(joined[i+1][1]))+
+    theme(legend.title= element_text("none"))
+  print(maps)
+}
+
+```
+
+```{Correlation to see association between variables}
+```
+
+```{r}
+data_for_correlation <- as.matrix(energy_data[10:length(energy_data)])
+corrplot::corrplot(cor(data_for_correlation, use = 'na'))
+```
