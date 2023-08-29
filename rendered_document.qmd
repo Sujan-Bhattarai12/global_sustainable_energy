@@ -9,8 +9,6 @@ The required data is download from the Kaggle
 
 (link: https://www.kaggle.com/datasets/anshtanwar/global-data-on-sustainable-energy)
 
-Research questions:
-
 # **Potential Use cases**
 
 1.  **Energy Consumption Prediction:** Predict future energy usage, aid planning, and track SDG 7 progress.
@@ -19,15 +17,7 @@ Research questions:
 
 3.  **Energy Access Classification:** Categorize regions for infrastructure development, understand sustainable energy's role.
 
-4.  **Sustainable Development Goal Tracking:** Monitor progress towards Goal 7, evaluate policy impact.
-
-5.  **Energy Equity Analysis:** Analyze access, density, and growth for equitable distribution.
-
-6.  **Energy Efficiency Optimization:** Identify intensive areas for environmental impact reduction.
-
-7.  **Renewable Energy Potential Assessment:** Identify regions for green investments based on capacity.
-
-8.  **Renewable Energy Investment Strategies:** Guide investors towards sustainable opportunities.
+4.  **Sustainable Development Goal Tracking:** Monitor progress towards Goal 7, evaluate policy
 
 Load required libraries
 
@@ -37,15 +27,21 @@ library(here)
 library(janitor)
 library(rnaturalearth)
 library(sf)
+library(kableExtra)
 ```
 
 Read the data, view first few columns, and sum the NA values for each column
 
 ```{r  message=FALSE, warning=FALSE}
 energy_data <- read_csv(here("raw_data","energy_data.csv"))
-
 head(energy_data)
 data.frame(total_NA_count = colSums(is.na(energy_data)))
+```
+
+Check duplicate rows if present
+
+```{r}
+sum(duplicated(energy_data)) 
 ```
 
 Check the class of each columns
@@ -68,10 +64,10 @@ for (i in seq_along(energy_data)){
 }
 ```
 
-Shorten column names from energy_data. Short names are better for labeling in visualization
+Shorten column names from energy_data. Short names are better in models and corr-plot.
 
 ```{r}
-energy_data <- energy_data %>%
+energy_data1 <- energy_data %>%
   rename( popElectric = "Access to electricity (% of population)",
           cleanfuels = "Access to clean fuels for cooking",
           renewable_elec_cap =  "Renewable-electricity-generating-capacity-per-capita",
@@ -93,7 +89,7 @@ energy_data <- energy_data %>%
           Lon = "Longitude")
 ```
 
-Visual representation of the raw data
+Map the data in worldmap to see the change
 
 ```{r}
 world_map <- ne_countries(returnclass = "sf", scale = "medium")
@@ -102,10 +98,10 @@ map <- world_map %>%
        geom_sf()
 ```
 
-Join the raw energy data with the global data based on ID
+Join the raw energy data with the global data based on ID so that data can be integrated in world map
 
 ```{r  message=FALSE, warning=FALSE}
-joined <- right_join(world_map,energy_data,
+joined <- right_join(world_map,energy_data1,
                      by=c("sovereignt"="Entity")) %>% 
           filter(Year==2020)
 
@@ -122,12 +118,94 @@ for (i in which(colnames(joined)=="Year"): which(colnames(joined)=="pop_density"
 
 ```
 
-Correlation to see association between variables
+Correlation to see association between variables, it is important to understand the presence of multi-collinearity in the dataset
 
 ```{r}
-data_for_correlation <- as.matrix(energy_data[10:length(energy_data)])
+data_for_correlation <- as.matrix(energy_data1[10:length(energy_data1)])
 corrplot::corrplot(cor(data_for_correlation, use = 'na'),
-                   method = "ellipse",
+                   method = "circle",
                    title  = "Correlation between variables in Energy data",
                    tl.col = "black")
+```
+
+Energy data contains energy trend since 2000 to 2020 for 178 countries. This project focuses in Nepal, model and forecast the future energy changes.
+
+```{r}
+nepal_energy_data <- energy_data %>% 
+                     filter(Entity=="Nepal")
+```
+
+Observe the general trend for all variables
+
+```{r}
+for (i in which(colnames(nepal_energy_data)=="Year"):which(colnames(nepal_energy_data)== "Density\\n(P/Km2)")){
+  graph =ggplot(nepal_energy_data, aes(Year, nepal_energy_data[[i]]))+
+    geom_line()+
+    xlab(colnames(nepal_energy_data[i][1]))+ ylab("Measure")+
+    theme_bw()
+  print(graph)
+}
+
+```
+
+Column with all NA and pop density has same data for two decades . Both of them can be removed.
+
+1.  **Energy Consumption Prediction:** Predict future energy usage, aid planning, and track SDG 7 progress
+
+    Create the regression model
+
+    Co2 emission as a function of energy use and other variables, select required variables only using domain knowledge
+
+    Nepal_energy_data\$Value_co2_emissions_kt_by_country \~ nepal_energy_data\$\`Access to electricity (% of population)\`: nepal_energy_data\$\`Energy intensity level of primary energy (MJ/\$2017 PPP GDP)\`
+
+Step 1: rearrange the columns
+
+```{r}
+nepal_energy_data <- nepal_energy_data %>% 
+                     select(`Value_co2_emissions_kt_by_country`, 
+                            `Access to electricity (% of population)`: `Energy intensity level of primary energy (MJ/$2017 PPP GDP)`)
+```
+
+step 2: Step wise regression to see if all variables are predictors for CO2 emission
+
+```{r}
+intercept_only <- lm(`Value_co2_emissions_kt_by_country` ~ 1, data=nepal_energy_data)
+
+#define model with all predictors
+all <- lm(`Value_co2_emissions_kt_by_country` ~ ., data=nepal_energy_data)
+
+#perform forward stepwise regression
+forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
+
+kableExtra:: kable(forward$anova)
+kableExtra:: kable(forward$coefficients)
+
+```
+
+Step3: Feature selection
+
+result from step-wise regression shows that only six variables are significant in defining co2 emission. this could be wrong but I believe in statistics though its seldom correct. So, keep only those columns
+
+```{r}
+nepal_feature_selected_data  <- nepal_energy_data %>% 
+  select( Co2_emission = `Value_co2_emissions_kt_by_country`, 
+          Energy_perCap = `Primary energy consumption per capita (kWh/person)`,
+          renewble_fraction = `Renewable energy share in the total final energy consumption (%)`, 
+          electricity_perCap= `Renewable-electricity-generating-capacity-per-capita`,
+          low_carbon_electricity = `Low-carbon electricity (% electricity)`,
+          energy_intensity = `Energy intensity level of primary energy (MJ/$2017 PPP GDP)`)
+
+```
+
+Fit the linear regression model
+
+```{r}
+linear_model <- lm(data = nepal_feature_selected_data,
+                   Co2_emission ~ (`Energy_perCap` +
+                                     renewble_fraction + 
+                                     electricity_perCap +
+                                     low_carbon_electricity + 
+                                     energy_intensity))
+
+summary(linear_model)
 ```
