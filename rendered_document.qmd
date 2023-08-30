@@ -122,10 +122,12 @@ Correlation to see association between variables, it is important to understand 
 
 ```{r}
 data_for_correlation <- as.matrix(energy_data1[10:length(energy_data1)])
-corrplot::corrplot(cor(data_for_correlation, use = 'na'),
-                   method = "circle",
-                   title  = "Correlation between variables in Energy data",
-                   tl.col = "black")
+corelation_matrix <- reshape2::melt(
+  round(cor(data_for_correlation, use = 'pairwise.complete.obs'), 2)
+  )
+ggplot(data= corelation_matrix, aes(Var1, Var2)) + 
+  geom_tile(aes(fill = value)) +
+  scale_fill_gradient(low="green", high ="yellow")
 ```
 
 Energy data contains energy trend since 2000 to 2020 for 178 countries. This project focuses in Nepal, model and forecast the future energy changes.
@@ -175,7 +177,7 @@ intercept_only <- lm(`Value_co2_emissions_kt_by_country` ~ 1, data=nepal_energy_
 all <- lm(`Value_co2_emissions_kt_by_country` ~ ., data=nepal_energy_data)
 
 #perform forward stepwise regression
-forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
+forward <- step(intercept_only, direction="both" , scope=formula(all), trace=0)
 
 kableExtra:: kable(forward$anova)
 kableExtra:: kable(forward$coefficients)
