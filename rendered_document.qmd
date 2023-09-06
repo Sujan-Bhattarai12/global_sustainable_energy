@@ -127,7 +127,7 @@ corelation_matrix <- reshape2::melt(
   )
 ggplot(data= corelation_matrix, aes(Var1, Var2)) + 
   geom_tile(aes(fill = value)) +
-  scale_fill_gradient(low="green", high ="yellow")
+  scale_fill_gradient(low="blue", high ="orange")
 ```
 
 Energy data contains energy trend since 2000 to 2020 for 178 countries. This project focuses in Nepal, model and forecast the future energy changes.
@@ -140,7 +140,7 @@ nepal_energy_data <- energy_data %>%
 Observe the general trend for all variables
 
 ```{r}
-for (i in which(colnames(nepal_energy_data)=="Year"):which(colnames(nepal_energy_data)== "Density\\n(P/Km2)")){
+for (i in which(colnames(nepal_energy_data)=="Year"):which(colnames    (nepal_energy_data)== "Density\\n(P/Km2)")){
   graph =ggplot(nepal_energy_data, aes(Year, nepal_energy_data[[i]]))+
     geom_line()+
     xlab(colnames(nepal_energy_data[i][1]))+ ylab("Measure")+
@@ -164,20 +164,23 @@ Step 1: rearrange the columns
 
 ```{r}
 nepal_energy_data <- nepal_energy_data %>% 
-                     select(`Value_co2_emissions_kt_by_country`, 
+                     select(Year, `Value_co2_emissions_kt_by_country`, 
                             `Access to electricity (% of population)`: `Energy intensity level of primary energy (MJ/$2017 PPP GDP)`)
 ```
 
 step 2: Step wise regression to see if all variables are predictors for CO2 emission
 
 ```{r}
-intercept_only <- lm(`Value_co2_emissions_kt_by_country` ~ 1, data=nepal_energy_data)
+intercept_only <- lm(`Value_co2_emissions_kt_by_country` ~ 1, 
+                      data=nepal_energy_data)
 
 #define model with all predictors
-all <- lm(`Value_co2_emissions_kt_by_country` ~ ., data=nepal_energy_data)
+all <- lm(`Value_co2_emissions_kt_by_country` ~ ., 
+           data=nepal_energy_data)
 
 #perform forward stepwise regression
-forward <- step(intercept_only, direction="both" , scope=formula(all), trace=0)
+forward <- step(intercept_only, direction="both" , 
+                scope=formula(all), trace=0)
 
 kableExtra:: kable(forward$anova)
 kableExtra:: kable(forward$coefficients)
@@ -190,24 +193,72 @@ result from step-wise regression shows that only six variables are significant i
 
 ```{r}
 nepal_feature_selected_data  <- nepal_energy_data %>% 
-  select( Co2_emission = `Value_co2_emissions_kt_by_country`, 
-          Energy_perCap = `Primary energy consumption per capita (kWh/person)`,
-          renewble_fraction = `Renewable energy share in the total final energy consumption (%)`, 
-          electricity_perCap= `Renewable-electricity-generating-capacity-per-capita`,
-          low_carbon_electricity = `Low-carbon electricity (% electricity)`,
-          energy_intensity = `Energy intensity level of primary energy (MJ/$2017 PPP GDP)`)
+        select(Year,
+Co2_emission = `Value_co2_emissions_kt_by_country`, 
+Energy_perCap = `Primary energy consumption per capita (kWh/person)`,
+renewble_fraction = `Renewable energy share in the total final energy consumption (%)`, 
+electricity_perCap = `Renewable-electricity-generating-capacity-per-capita`,
+low_carbon_electricity = `Low-carbon electricity (% electricity)`,
+energy_intensity = `Energy intensity level of primary energy (MJ/$2017 PPP GDP)`
+)
 
 ```
 
-Fit the linear regression model
+Split the data into test and train model
 
 ```{r}
-linear_model <- lm(data = nepal_feature_selected_data,
+set.seed(123)
+smp_size <- floor(0.75 * nrow(nepal_feature_selected_data))
+
+## set the seed to make your partition reproducible
+set.seed(123)
+train_ind <- sample(seq_len(nrow(nepal_feature_selected_data)), size = smp_size)
+
+train <- nepal_feature_selected_data[train_ind, ]
+test <-  nepal_feature_selected_data[-train_ind, ] 
+```
+
+Fit the linear regression model on train data
+
+```{r}
+lm_model <- lm(data = train,
                    Co2_emission ~ (`Energy_perCap` +
                                      renewble_fraction + 
                                      electricity_perCap +
                                      low_carbon_electricity + 
                                      energy_intensity))
+summary(lm_model)
+t(broom::glance(lm_model)) ##glance creates in long columns, transpose changes it to one column format
+```
 
-summary(linear_model)
+Test model accuracy using test dataset
+
+```{r}
+train["model_predict"] <- predict(lm_model, train)
+
+ggplot(train, aes(Year, Co2_emission))+
+  geom_line()+
+  geom_line(aes(Year, model_predict), color="green")
+```
+
+Linear model has high accuracy for the data set. Now use the same model to forecast the co2 consumption for next 10 years.
+
+Use mathematic metrics MAE to check the accuracy of the model
+
+```{r}
+MAE <- (1/nrow(train))*sum((train$model_predict- train$Co2_emission), na.rm = TRUE)
+print(MAE)
+```
+
+The MAE calculation gave output a number. It's hard to interpret. Normalize it between 0 to 1, so that low values of MAE is the best fit
+
+```{r}
+range_actual <- max(train$Co2_emission, na.rm = TRUE) - min(train$Co2_emission, 
+                                                            na.rm=TRUE)
+# Normalize MAE
+normalized_MAE <- (MAE/range_actual)
+normalized_MAE
+
+##shorcut to measure more accuracy metrics
+forecast:: accuracy(train$Co2_emission, train$model_predict)
 ```
