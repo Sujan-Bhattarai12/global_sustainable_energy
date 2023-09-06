@@ -262,3 +262,5 @@ normalized_MAE
 ##shorcut to measure more accuracy metrics
 forecast:: accuracy(train$Co2_emission, train$model_predict)
 ```
+
+Forecast using Naive method
