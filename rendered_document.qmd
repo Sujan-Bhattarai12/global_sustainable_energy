@@ -263,4 +263,4 @@ normalized_MAE
 forecast:: accuracy(train$Co2_emission, train$model_predict)
 ```
 
-Forecast using Naive method
+Forecast using Naive method, or simply using linear regression model
