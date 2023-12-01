@@ -651,7 +651,19 @@ Removed 1 row containing missing values (`geom_line()`).</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 7.081932e-16</code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="do">##shorcut to measure more accuracy metrics</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>forecast<span class="sc">::</span> <span class="fu">accuracy</span>(train<span class="sc">$</span>Co2_emission, train<span class="sc">$</span>model_predict)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo </code></pre>
 </div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                   ME     RMSE      MAE        MPE     MAPE
+Test set 9.484732e-12 230.8992 174.0716 -0.5198316 3.669876</code></pre>
+</div>
+</div>
+<p>Forecast using Naive method</p>
 </section>
 
 </main>
