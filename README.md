@@ -1,6 +1,5 @@
-## Global_sustainable_energy
-### Summary
-The provided R code conducts a thorough analysis of global sustainable energy data spanning from 2000 to 2020, sourced from Kaggle. The code encompasses essential tasks such as data cleaning, visualization, correlation analysis, and developing a linear regression model for predicting CO2 emissions in Nepal.
+# Global_sustainable_energy
+Detailed analysis of global sustainable energy data spanning from 2000 to 2020, sourced from Kaggle. The code encompasses essential tasks such as data cleaning, visualization, correlation analysis, and developing a linear regression model for predicting CO2 emissions in Nepal.
 
 ### Important
 Most output could be generated using simple functions, But I have used loops to understand better
